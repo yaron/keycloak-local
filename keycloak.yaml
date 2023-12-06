@@ -1,0 +1,42 @@
+extraEnv: |
+  - name: PROXY_ADDRESS_FORWARDING
+    value: "true"
+args: ["-Djavax.net.ssl.trustStore=/opt/certs/keycloak.truststore.jks", "-Djavax.net.ssl.trustStorePassword=password"]
+    
+extraVolumeMounts: |
+  - name: keystore
+    mountPath: /opt/certs
+    readOnly: true
+
+extraVolumes: |
+  - name: keystore
+    secret:
+      secretName: keycloak-truststore
+
+ingress:
+  # If `true`, an Ingress is created
+  enabled: true
+  # The name of the Ingress Class associated with this ingress
+  ingressClassName: "nginx"
+  # The Service port targeted by the Ingress
+  servicePort: http
+  # Ingress annotations
+  annotations: 
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 128k
+    cert-manager.io/cluster-issuer: ca-issuer
+
+  # Additional Ingress labels
+  labels: {}
+   # List of rules for the Ingress
+  rules:
+    -
+      # Ingress host
+      host: keycloak.localhost
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: 
+  - hosts:
+    - keycloak.localhost
+    secretName: "keycloak-tls"
+
